@@ -4,16 +4,20 @@ from fastapi_users import schemas
 from pydantic_extra_types.phone_numbers import PhoneNumber
 
 
-class UserRead(schemas.BaseUser[uuid.UUID]):
+class BaseUser:
 
     phone: PhoneNumber
 
+class UserRead(schemas.BaseUser[uuid.UUID], BaseUser):
 
-class UserCreate(schemas.BaseUserCreate):
+    pass    
 
-    phone: PhoneNumber
+
+class UserCreate(schemas.BaseUserCreate, BaseUser):
+
+    pass
     
 
-class UserUpdate(schemas.BaseUserUpdate):
+class UserUpdate(schemas.BaseUserUpdate, BaseUser):
 
-    phone: PhoneNumber
+    pass

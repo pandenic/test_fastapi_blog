@@ -1,37 +1,47 @@
-import datetime
+from datetime import datetime
+from typing import Annotated
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict
+from fastapi import Form, UploadFile
+from fastapi.background import P
+from pydantic import BaseModel, ConfigDict, PositiveInt, field_validator
+
+from core.config import settings
+from exceptions import WrongArticleImageFormatError
 
 
-class Article(BaseModel):
+class BaseArticle(BaseModel):
     
     title: str
     summary: str
     content: str
-    picture: str | None
-    category_id: int
+    category_id: PositiveInt
 
-    model_config = ConfigDict(from_attributes=True)
+class GetArticle(BaseArticle):
 
-class GetArticle(Article):
-
+    id: PositiveInt
     created_at: datetime
     updated_at: datetime
 
-    deleted: bool
+    deleted: bool = False
 
     user_id: UUID
 
+    model_config = ConfigDict(from_attributes=True)
 
-class CreateArticle(Article):
+
+class CreateArticle(BaseArticle):
     
-    user_id: UUID
+    pass
 
-class UpdateArticle(Article):
 
-    title: str
-    summary: str
-    content: str
-    picture: str | None
-    category_id: int
+CreateArticleForm = Annotated[CreateArticle, Form()]
+
+
+class UpdateArticle(BaseArticle):
+
+    title: str | None = None
+    summary: str | None = None
+    content: str | None = None
+    image: str | None = None
+    category_id: PositiveInt | None = None

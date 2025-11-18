@@ -3,12 +3,11 @@ from typing import TypeVar
 from pydantic import BaseModel
 
 from schemas.article import (  # noqa
-    CreateArticle,
+    CreateArticleForm,
     GetArticle,
-    ListArticle,
     UpdateArticle,
 )
-from schemas.category import Category  # noqa
+from schemas.category import CreateCategory, GetCategory  # noqa
 from schemas.user import UserCreate, UserRead, UserUpdate  # noqa
 
 SchemaModelType = TypeVar("SchemaModelType", bound=BaseModel)

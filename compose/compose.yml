@@ -1,10 +1,30 @@
 services:
+  blog_image:
+    build:
+      context: ../
+      dockerfile: compose/Dockerfile
+    image: blog:latest
+    entrypoint: ["/bin/true"]
+
+  # api:
+  #   image: blog:latest
+  #   env_file: .env
+  #   environment:
+  #     CONTAINER_TYPE: api
+  #     RABBITMQ_HOST: rabbit_mq
+  #   ports:
+  #     - 8080:8080
+  #   depends_on:
+  #     - db
+  #     - blog_image
+  #   pull_policy: never
+
   db:
     image: postgres:18-alpine
     container_name: database
     restart: unless-stopped
     environment:
-      - PGDATA=/data
+      PGDATA: /data
     env_file: .env
     ports:
       - 5432:5432
@@ -15,6 +35,85 @@ services:
       interval: 30s
       timeout: 10s
       retries: 5
+  
+  rabbit_mq:
+    image: rabbitmq:4-management-alpine
+    container_name: rabbit_mq
+    restart: always
+    environment:
+      RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS:
+        -rabbit 
+        log_levels [{connection,error},{default,error}] 
+        disk_free_limit 2147483648
+    env_file: .env
+    ports:
+      - 15672:15672
+      - 5672:5672
+    volumes:
+      - rabbit_mq_data:/var/lib/rabbitmq
+
+  mailcatcher:
+    restart: on-failure
+    image: dockage/mailcatcher:0.9.0
+    ports:
+    - 1080:1080
+    - 1025:1025
+    # depends_on:
+    #   - api
+
+  celery_worker:
+    image: blog:latest
+    pull_policy: never
+    environment:
+      CONTAINER_TYPE: celery_worker
+      RABBITMQ_HOST: rabbit_mq
+    env_file: .env
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "uv run celery -A services.celery.worker.celery_app inspect ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    depends_on:
+      - rabbit_mq
+      - blog_image
+
+  flower:
+    image: blog:latest
+    pull_policy: never
+    environment:
+      CONTAINER_TYPE: flower
+      RABBITMQ_HOST: rabbit_mq
+    env_file: .env
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "uv run celery -A services.celery.worker.celery_app inspect ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    depends_on:
+      - rabbit_mq
+      - celery_worker
+      - blog_image
+
+  minio:
+    image: minio/minio:latest
+    restart: unless-stopped
+    env_file: .env
+    ports:
+      - 9000:9000
+      - 9001:9001
+    volumes:
+      - minio_data:/data
+    command: server /data --console-address ":9001"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+      
 
 volumes:
   db_data:
+  rabbit_mq_data:
+  minio_data:

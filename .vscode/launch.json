@@ -4,15 +4,18 @@
     // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
-    
         {
-            "name": "Python Debugger: Current File",
+            "name": "Python Debugger: FastAPI",
             "type": "debugpy",
             "request": "launch",
-            "module": "alembic",
-            "args": ["revision", "--autogenerate" "-m 'Initial'"],
-            "console": "integratedTerminal",
-            "justMyCode": false
+            "module": "uvicorn",
+            "args": [
+                "main:app",
+                "--reload",
+                "--port", "8080",
+                "--app-dir", "src/"
+            ],
+            "jinja": true
         }
     ]
 }

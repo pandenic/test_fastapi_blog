@@ -34,7 +34,7 @@ class Article(Base):
     title: Mapped[str]
     summary: Mapped[str]
     content: Mapped[str]
-    picture: Mapped[str | None] = mapped_column(nullable=True)
+    image: Mapped[str | None] = mapped_column(nullable=True)
     created_at: Mapped[datetime] = mapped_column(server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(
         server_default=func.now(), server_onupdate=func.now(),

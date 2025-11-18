@@ -1,0 +1,6 @@
+{
+    "cSpell.words": [
+        "bindok"
+    ],
+    "terminal.integrated.tabs.title": "${process}${separator}${task}${separator}${local}"
+}

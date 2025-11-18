@@ -14,6 +14,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from core.config import settings
 from core.db import get_async_session
 from models.user import User
+from services.celery.tasks import send_email
 
 
 async def get_user_db(
@@ -29,23 +30,8 @@ class UserManager(UUIDIDMixin, BaseUserManager[User, uuid.UUID]):
     async def on_after_register(
         self, user: User, request: Request | None = None,
     ) -> None:
+        send_email.delay([user.email], "You has been registered successfully.")
         print(f"User {user.id} has registered.")
-
-    async def on_after_forgot_password(
-        self, user: User, token: str, request: Request | None = None,
-    ) -> None:
-        print(
-            f"User {user.id} has forgot their password. Reset token: {token}",
-        )
-
-    async def on_after_request_verify(
-        self, user: User, token: str, request: Request | None = None,
-    ) -> None:
-        print(
-            f"Verification requested for user {user.id}. "
-            f"Verification token: {token}",
-        )
-
 
 async def get_user_manager(
     user_db: SQLAlchemyUserDatabase = Depends(get_user_db),
